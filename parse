@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ "X$1" == "X" ] ; then
+	echo supply input filename
+	exit 1
+fi
+
+grep '^ ' "$1" \
+| cut -d, -f1 \
+| sed -e 's/ (.*$//;s/Sir //;s/Dame //;s/ see .*$//;s/ is .*$//;s/ [Bb]orn.*$//;s/\[.*$//' \
+| while read NAME ; do
+	echo
+	echo NAME is "$NAME"
+
+	URLNAME="$( echo "$NAME" | sed -e 's/ /%20/g' )"
+
+	THIS CODE IS BROKEN AND DOES NOT RUN
+	UNLESS YOU EDIT THE STRINGS IN THE NEXT LINE
+	AND REMOVE THIS COMMENT
+
+	curl -s "https://www.google.com.sg/complete/search?client=psy-ab&hl=en-SG&gs_rn=64&gs_ri=psy-ab&tok=PUT-YOUR-TOKEN-HERE&pq=${URLNAME}&cp=10&gs_id=pm&q=${URLNAME}&xhr=t" \
+		-H 'Host: www.google.com.sg' -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0' \
+		-H 'Accept: */*' -H 'Accept-Language: en-ZA,en-GB;q=0.8,en-US;q=0.5,en;q=0.3' --compressed \
+		-H 'Referer: https://www.google.com.sg/' -H 'Cookie: PUT-YOUR-OWN-COOKIE-IN-HERE' \
+		-H 'Connection: close' | sed -e 's/\],\[/],\n[/g'
+
+	echo
+	sleep 1
+done | tee output-"$1"
+
+sed -e 's|^.*\\u003cb\\u003e[ ]\?\(.*\)\\u003c\\/b\\u003e.*$|+ \1|g' < output-"$1" > parsed-"$1"
+
+grep '^\+' parsed-"$1" -h | sort | uniq -c | sort -nr > sum-"$1"
+
+
